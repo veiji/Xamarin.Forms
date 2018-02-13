@@ -15,6 +15,11 @@ namespace Xamarin.Forms.Build.Tasks
 {
 	public class XamlCTask : XamlTask
 	{
+
+		static XamlCTask()
+		{
+			Internals.Performance.SetProvider(new PerformanceProvider());
+		}
 		bool hasCompiledXamlResources;
 		public bool KeepXamlResources { get; set; }
 		public bool OptimizeIL { get; set; }
@@ -259,6 +264,8 @@ namespace Xamarin.Forms.Build.Tasks
 					success = false;
 				}
 			}
+			foreach (var p in ((PerformanceProvider)Internals.Performance.Provider).GetStats())
+				Logger.Helper.LogWarning(p);
 			return success;
 		}
 
@@ -278,7 +285,7 @@ namespace Xamarin.Forms.Build.Tasks
 
 					//First using the ResourceLoader
 					var nop = Instruction.Create(Nop);
-					var getResourceProvider = module.ImportReference(module.ImportReference(typeof(Internals.ResourceLoader))
+					var getResourceProvider = module.GetOrImportReference(module.GetOrImportReference(typeof(Internals.ResourceLoader))
 							 .Resolve()
 							 .Properties.FirstOrDefault(pd => pd.Name == "ResourceProvider")
 							 .GetMethod);
@@ -286,21 +293,21 @@ namespace Xamarin.Forms.Build.Tasks
 					il.Emit(Brfalse, nop);
 					il.Emit(Call, getResourceProvider);
 
-					var getTypeFromHandle = module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }));
-					var getTypeInfo = module.ImportReference(typeof(System.Reflection.IntrospectionExtensions).GetMethod("GetTypeInfo", new Type[] { typeof(Type) }));
-					var getAssembly = module.ImportReference(typeof(Type).GetProperty("Assembly").GetMethod);
-					var getAssemblyName = module.ImportReference(typeof(System.Reflection.Assembly).GetMethod("GetName", new Type[] { }));
-					il.Emit(Ldtoken, module.ImportReference(initComp.DeclaringType));
-					il.Emit(Call, module.ImportReference(getTypeFromHandle));
-					il.Emit(Call, module.ImportReference(getTypeInfo));
-					il.Emit(Callvirt, module.ImportReference(getAssembly));
-					il.Emit(Callvirt, module.ImportReference(getAssemblyName)); //assemblyName
+					var getTypeFromHandle = module.GetOrImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }));
+					var getTypeInfo = module.GetOrImportReference(typeof(System.Reflection.IntrospectionExtensions).GetMethod("GetTypeInfo", new Type[] { typeof(Type) }));
+					var getAssembly = module.GetOrImportReference(typeof(Type).GetProperty("Assembly").GetMethod);
+					var getAssemblyName = module.GetOrImportReference(typeof(System.Reflection.Assembly).GetMethod("GetName", new Type[] { }));
+					il.Emit(Ldtoken, module.GetOrImportReference(initComp.DeclaringType));
+					il.Emit(Call, module.GetOrImportReference(getTypeFromHandle));
+					il.Emit(Call, module.GetOrImportReference(getTypeInfo));
+					il.Emit(Callvirt, module.GetOrImportReference(getAssembly));
+					il.Emit(Callvirt, module.GetOrImportReference(getAssemblyName)); //assemblyName
 
 					il.Emit(Ldstr, resourcePath);	//resourcePath
-					var func = module.ImportReference(module.ImportReference(typeof(Func<System.Reflection.AssemblyName, string, string>))
+					var func = module.GetOrImportReference(module.GetOrImportReference(typeof(Func<System.Reflection.AssemblyName, string, string>))
 							 .Resolve()
 							 .Methods.FirstOrDefault(md => md.Name == "Invoke"));
-					func = func.ResolveGenericParameters(module.ImportReference(typeof(Func<System.Reflection.AssemblyName, string, string>)), module);
+					func = func.ResolveGenericParameters(module.GetOrImportReference(typeof(Func<System.Reflection.AssemblyName, string, string>)), module);
 					il.Emit(Callvirt, func);
 					il.Emit(Brfalse, nop);
 					il.Emit(Ldarg_0);
@@ -311,7 +318,7 @@ namespace Xamarin.Forms.Build.Tasks
 					//Or using the deprecated XamlLoader
 					nop = Instruction.Create(Nop);
 #pragma warning disable 0618
-					var getXamlFileProvider = module.ImportReference(module.ImportReference(typeof(Xaml.Internals.XamlLoader))
+					var getXamlFileProvider = module.GetOrImportReference(module.GetOrImportReference(typeof(Xaml.Internals.XamlLoader))
 							.Resolve()
 							.Properties.FirstOrDefault(pd => pd.Name == "XamlFileProvider")
 							.GetMethod);
@@ -321,14 +328,14 @@ namespace Xamarin.Forms.Build.Tasks
 					il.Emit(Brfalse, nop);
 					il.Emit(Call, getXamlFileProvider);
 					il.Emit(Ldarg_0);
-					var getType = module.ImportReference(module.ImportReference(typeof(object))
+					var getType = module.GetOrImportReference(module.GetOrImportReference(typeof(object))
 									  .Resolve()
 									  .Methods.FirstOrDefault(md => md.Name == "GetType"));
 					il.Emit(Call, getType);
-					func = module.ImportReference(module.ImportReference(typeof(Func<Type, string>))
+					func = module.GetOrImportReference(module.GetOrImportReference(typeof(Func<Type, string>))
 							 .Resolve()
 							 .Methods.FirstOrDefault(md => md.Name == "Invoke"));
-					func = func.ResolveGenericParameters(module.ImportReference(typeof(Func<Type, string>)), module);
+					func = func.ResolveGenericParameters(module.GetOrImportReference(typeof(Func<Type, string>)), module);
 					il.Emit(Callvirt, func);
 					il.Emit(Brfalse, nop);
 					il.Emit(Ldarg_0);
@@ -361,7 +368,7 @@ namespace Xamarin.Forms.Build.Tasks
 		internal static string GetPathForType(ModuleDefinition module, TypeReference type)
 		{
 			foreach (var ca in type.Module.GetCustomAttributes()) {
-				if (!TypeRefComparer.Default.Equals(ca.AttributeType, module.ImportReference(typeof(XamlResourceIdAttribute))))
+				if (!TypeRefComparer.Default.Equals(ca.AttributeType, module.GetOrImportReference(typeof(XamlResourceIdAttribute))))
 					continue;
 				if (!TypeRefComparer.Default.Equals(ca.ConstructorArguments[2].Value as TypeReference, type))
 					continue;
@@ -373,7 +380,7 @@ namespace Xamarin.Forms.Build.Tasks
 		internal static string GetResourceIdForPath(ModuleDefinition module, string path)
 		{
 			foreach (var ca in module.GetCustomAttributes()) {
-				if (!TypeRefComparer.Default.Equals(ca.AttributeType, module.ImportReference(typeof(XamlResourceIdAttribute))))
+				if (!TypeRefComparer.Default.Equals(ca.AttributeType, module.GetOrImportReference(typeof(XamlResourceIdAttribute))))
 					continue;
 				if (ca.ConstructorArguments[1].Value as string != path)
 					continue;

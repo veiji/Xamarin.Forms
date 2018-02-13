@@ -47,8 +47,8 @@ namespace Xamarin.Forms.Core.XamlC
 				var style = (styleNode as ValueNode).Value as string;
 				yield return Create(Ldstr, style);
 
-				var fromString = module.ImportReference(typeof(StyleSheets.StyleSheet).GetMethods().FirstOrDefault(mi => mi.Name == nameof(StyleSheets.StyleSheet.FromString) && mi.GetParameters().Length == 1));
-				yield return Create(Call, module.ImportReference(fromString));
+				var fromString = module.GetOrImportReference(typeof(StyleSheets.StyleSheet).GetMethods().FirstOrDefault(mi => mi.Name == nameof(StyleSheets.StyleSheet.FromString) && mi.GetParameters().Length == 1));
+				yield return Create(Call, module.GetOrImportReference(fromString));
 			}
 			else {
 				string source = (sourceNode as ValueNode)?.Value as string;
@@ -65,23 +65,23 @@ namespace Xamarin.Forms.Core.XamlC
 				if (resourceId == null)
 					throw new XamlParseException($"Resource '{source}' not found.", node);
 
-				var getTypeFromHandle = module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), new[] { typeof(RuntimeTypeHandle) }));
-				var getAssembly = module.ImportReference(typeof(Type).GetProperty(nameof(Type.Assembly)).GetGetMethod());
-				yield return Create(Ldtoken, module.ImportReference(((ILRootNode)rootNode).TypeReference));
-				yield return Create(Call, module.ImportReference(getTypeFromHandle));
-				yield return Create(Callvirt, module.ImportReference(getAssembly)); //assembly
+				var getTypeFromHandle = module.GetOrImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), new[] { typeof(RuntimeTypeHandle) }));
+				var getAssembly = module.GetOrImportReference(typeof(Type).GetProperty(nameof(Type.Assembly)).GetGetMethod());
+				yield return Create(Ldtoken, module.GetOrImportReference(((ILRootNode)rootNode).TypeReference));
+				yield return Create(Call, module.GetOrImportReference(getTypeFromHandle));
+				yield return Create(Callvirt, module.GetOrImportReference(getAssembly)); //assembly
 
 				yield return Create(Ldstr, resourceId); //resourceId
 
 				foreach (var instruction in node.PushXmlLineInfo(context))
 					yield return instruction; //lineinfo
 
-				var fromAssemblyResource = module.ImportReference(typeof(StyleSheets.StyleSheet).GetMethods().FirstOrDefault(mi => mi.Name == nameof(StyleSheets.StyleSheet.FromAssemblyResource) && mi.GetParameters().Length == 3));
-				yield return Create(Call, module.ImportReference(fromAssemblyResource));
+				var fromAssemblyResource = module.GetOrImportReference(typeof(StyleSheets.StyleSheet).GetMethods().FirstOrDefault(mi => mi.Name == nameof(StyleSheets.StyleSheet.FromAssemblyResource) && mi.GetParameters().Length == 3));
+				yield return Create(Call, module.GetOrImportReference(fromAssemblyResource));
 			}
 
 			//the variable is of type `object`. fix that
-			var vardef = new VariableDefinition(module.ImportReference(typeof(StyleSheets.StyleSheet)));
+			var vardef = new VariableDefinition(module.GetOrImportReference(typeof(StyleSheets.StyleSheet)));
 			yield return Create(Stloc, vardef);
 			vardefref.VariableDefinition = vardef;
 		}

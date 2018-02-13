@@ -14,7 +14,7 @@
 	</ContentPage.Resources>
 	<StackLayout>
 		<Label x:Name="label0" Text="Foo"/>
-		<Label x:Name="label1" Text="{Binding Path=labeltext}"/>
+		<!--<Label x:Name="label1" Text="{Binding Path=labeltext}"/>
 		<Button x:Name="button0" Clicked="onButtonClicked" />
 		<Image x:Name="image0" IsOpaque="true" />
 		<Label x:Name="label2" Grid.Column="1">
@@ -73,11 +73,11 @@
 		<Label x:Name="label14" AbsoluteLayout.LayoutFlags="PositionProportional,WidthProportional" />
 		<ContentView x:Name="content0">
 			<local:ConvertibleToView/>
-		</ContentView>
+		</ContentView>-->
 		<StackLayout x:Name="stack4">
 			<local:ConvertibleToView/>
 		</StackLayout>
-		<ContentView x:Name="contentview2">
+		<!--<ContentView x:Name="contentview2">
 			<ContentView.Content>
 				<Label />
 				<d:IgnorableElement />
@@ -96,6 +96,6 @@
 				<local:SV_Foo Value="Bar"/>
 			</local:MockViewWithValues.Bar>
 		</local:MockViewWithValues>
-		<local:MockViewWithValues x:Name="implicit3" Foo="Foo" />
+		<local:MockViewWithValues x:Name="implicit3" Foo="Foo" />-->
 	</StackLayout>
 </ContentPage>

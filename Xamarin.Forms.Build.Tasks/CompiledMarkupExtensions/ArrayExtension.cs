@@ -27,7 +27,7 @@ namespace Xamarin.Forms.Build.Tasks
 					instructions.Add(Instruction.Create(OpCodes.Ldelema, typeTypeRef));
 					instructions.Add(Instruction.Create(OpCodes.Ldloc, vardef));
 					if (vardef.VariableType == module.TypeSystem.Object) 
-						instructions.Add(Instruction.Create(OpCodes.Unbox_Any, module.ImportReference(typeTypeRef)));
+						instructions.Add(Instruction.Create(OpCodes.Unbox_Any, module.GetOrImportReference(typeTypeRef)));
 					instructions.Add(Instruction.Create(OpCodes.Stobj, typeTypeRef));
 				} else {
 					instructions.Add(Instruction.Create(OpCodes.Dup));

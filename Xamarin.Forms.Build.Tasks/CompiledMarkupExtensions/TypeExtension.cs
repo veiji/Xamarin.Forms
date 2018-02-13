@@ -12,7 +12,7 @@ namespace Xamarin.Forms.Build.Tasks
 	{
 		public IEnumerable<Instruction> ProvideValue(IElementNode node, ModuleDefinition module, ILContext context, out TypeReference memberRef)
 		{
-			memberRef = module.ImportReference(typeof(Type));
+			memberRef = module.GetOrImportReference(typeof(Type));
 			INode typeNameNode;
 
 			var name = new XmlName("", "TypeName");
@@ -28,16 +28,16 @@ namespace Xamarin.Forms.Build.Tasks
 				node.CollectionItems.Clear();
 			}
 
-			var typeref = module.ImportReference(XmlTypeExtensions.GetTypeReference(valueNode.Value as string, module, node as BaseNode));
+			var typeref = module.GetOrImportReference(XmlTypeExtensions.GetTypeReference(valueNode.Value as string, module, node as BaseNode));
 			if (typeref == null)
 				throw new XamlParseException($"Can't resolve type `{valueNode.Value}'.", node as IXmlLineInfo);
 
 			context.TypeExtensions[node] = typeref;
 
-			var getTypeFromHandle = module.ImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }));
+			var getTypeFromHandle = module.GetOrImportReference(typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }));
 			return new List<Instruction> {
-				Instruction.Create(OpCodes.Ldtoken, module.ImportReference(typeref)),
-				Instruction.Create(OpCodes.Call, module.ImportReference(getTypeFromHandle))
+				Instruction.Create(OpCodes.Ldtoken, module.GetOrImportReference(typeref)),
+				Instruction.Create(OpCodes.Call, module.GetOrImportReference(getTypeFromHandle))
 			};
 		}
 	}

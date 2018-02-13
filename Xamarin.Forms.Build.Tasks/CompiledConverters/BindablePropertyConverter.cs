@@ -78,8 +78,8 @@ namespace Xamarin.Forms.Core.XamlC
 			TypeReference declaringTypeReference;
 			FieldReference bpRef = typeRef.GetField(fd => fd.Name == $"{propertyName}Property" && fd.IsStatic && fd.IsPublic, out declaringTypeReference);
 			if (bpRef != null) {
-				bpRef = module.ImportReference(bpRef.ResolveGenericParameters(declaringTypeReference));
-				bpRef.FieldType = module.ImportReference(bpRef.FieldType);
+				bpRef = module.GetOrImportReference(bpRef.ResolveGenericParameters(declaringTypeReference));
+				bpRef.FieldType = module.GetOrImportReference(bpRef.FieldType);
 			}
 			return bpRef;
 		}

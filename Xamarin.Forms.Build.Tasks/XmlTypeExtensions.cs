@@ -133,14 +133,14 @@ namespace Xamarin.Forms.Build.Tasks
 			if (type != null && typeArguments != null && type.HasGenericParameters)
 			{
 				type =
-					module.ImportReference(type)
+					module.GetOrImportReference(type)
 						.MakeGenericInstanceType(typeArguments.Select(x => GetTypeReference(x, module, xmlInfo)).ToArray());
 			}
 
 			if (type == null)
 				throw new XamlParseException(string.Format("Type {0} not found in xmlns {1}", elementName, namespaceURI), xmlInfo);
 
-			return module.ImportReference(type);
+			return module.GetOrImportReference(type);
 		}
 	}
 }

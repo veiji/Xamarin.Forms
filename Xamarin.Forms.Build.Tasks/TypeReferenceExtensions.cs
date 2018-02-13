@@ -264,7 +264,7 @@ namespace Xamarin.Forms.Build.Tasks
 					{
 						int i = 0;
 						foreach (var arg in ((GenericInstanceType)typeRef).GenericArguments)
-							((GenericInstanceType)face.InterfaceType).GenericArguments[i++] = module.ImportReference(arg);
+							((GenericInstanceType)face.InterfaceType).GenericArguments[i++] = module.GetOrImportReference(arg);
 					}
 					foreach (var tuple in face.InterfaceType.GetMethods(predicate, module))
 						yield return tuple;
@@ -297,7 +297,7 @@ namespace Xamarin.Forms.Build.Tasks
 				foreach (var op in implicitOperators) {
 					var cast = op.Item1;
 					var opDeclTypeRef = op.Item2;
-					var castDef = module.ImportReference(cast).ResolveGenericParameters(opDeclTypeRef, module);
+					var castDef = module.GetOrImportReference(cast).ResolveGenericParameters(opDeclTypeRef, module);
 					var returnType = castDef.ReturnType;
 					if (returnType.IsGenericParameter)
 						returnType = ((GenericInstanceType)opDeclTypeRef).GenericArguments [((GenericParameter)returnType).Position];

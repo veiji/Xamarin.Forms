@@ -13,16 +13,16 @@ namespace Xamarin.Forms.Build.Tasks
 			if (declaringTypeRef == null)
 				throw new ArgumentNullException(nameof(declaringTypeRef));
 
-			var reference = new MethodReference(self.Name, module.ImportReference(self.ReturnType))
+			var reference = new MethodReference(self.Name, module.GetOrImportReference(self.ReturnType))
 			{
-				DeclaringType = module.ImportReference(declaringTypeRef),
+				DeclaringType = module.GetOrImportReference(declaringTypeRef),
 				HasThis = self.HasThis,
 				ExplicitThis = self.ExplicitThis,
 				CallingConvention = self.CallingConvention
 			};
 
 			foreach (var parameter in self.Parameters) {
-				var p = parameter.ParameterType.IsGenericParameter ? parameter.ParameterType : module.ImportReference(parameter.ParameterType);
+				var p = parameter.ParameterType.IsGenericParameter ? parameter.ParameterType : module.GetOrImportReference(parameter.ParameterType);
 				reference.Parameters.Add(new ParameterDefinition(p));
 			}
 
@@ -38,7 +38,7 @@ namespace Xamarin.Forms.Build.Tasks
 				return;
 
 			for (var i = 0; i < self.Parameters.Count; i++)
-				self.Parameters[i].ParameterType = module.ImportReference(self.Parameters[i].ParameterType);
+				self.Parameters[i].ParameterType = module.GetOrImportReference(self.Parameters[i].ParameterType);
 		}
 
 		public static MethodReference MakeGeneric(this MethodReference self, TypeReference declaringType, params TypeReference [] arguments)

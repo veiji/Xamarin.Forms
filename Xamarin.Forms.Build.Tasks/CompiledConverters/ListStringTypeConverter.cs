@@ -22,13 +22,13 @@ namespace Xamarin.Forms.Core.XamlC
 			}
 			var parts = value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList();
 
-			var listCtor = module.ImportReference(typeof(List<>)).Resolve().Methods.FirstOrDefault(md => md.IsConstructor && md.Parameters.Count == 1 && md.Parameters[0].ParameterType.FullName == "System.Int32");
-			var listCtorRef = module.ImportReference(listCtor);
-			listCtorRef = module.ImportReference(listCtorRef.ResolveGenericParameters(module.ImportReference(typeof(List<string>)), module));
+			var listCtor = module.GetOrImportReference(typeof(List<>)).Resolve().Methods.FirstOrDefault(md => md.IsConstructor && md.Parameters.Count == 1 && md.Parameters[0].ParameterType.FullName == "System.Int32");
+			var listCtorRef = module.GetOrImportReference(listCtor);
+			listCtorRef = module.GetOrImportReference(listCtorRef.ResolveGenericParameters(module.GetOrImportReference(typeof(List<string>)), module));
 
-			var adder = module.ImportReference(typeof(ICollection<>)).Resolve().Methods.FirstOrDefault(md => md.Name == "Add" && md.Parameters.Count == 1);
-			var adderRef = module.ImportReference(adder);
-			adderRef = module.ImportReference(adderRef.ResolveGenericParameters(module.ImportReference(typeof(ICollection<string>)), module));
+			var adder = module.GetOrImportReference(typeof(ICollection<>)).Resolve().Methods.FirstOrDefault(md => md.Name == "Add" && md.Parameters.Count == 1);
+			var adderRef = module.GetOrImportReference(adder);
+			adderRef = module.GetOrImportReference(adderRef.ResolveGenericParameters(module.GetOrImportReference(typeof(ICollection<string>)), module));
 
 			yield return Instruction.Create(OpCodes.Ldc_I4, parts.Count);
 			yield return Instruction.Create(OpCodes.Newobj, listCtorRef);

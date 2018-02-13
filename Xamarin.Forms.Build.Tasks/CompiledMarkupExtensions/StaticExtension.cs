@@ -26,7 +26,7 @@ namespace Xamarin.Forms.Build.Tasks
 			var typename = member.Substring(0, dotIdx);
 			var membername = member.Substring(dotIdx + 1);
 
-			var typeRef = module.ImportReference(XmlTypeExtensions.GetTypeReference(typename, module, node as BaseNode));
+			var typeRef = module.GetOrImportReference(XmlTypeExtensions.GetTypeReference(typename, module, node as BaseNode));
 			var fieldRef = GetFieldReference(typeRef, membername, module);
 			var propertyDef = GetPropertyDefinition(typeRef, membername, module);
 
@@ -75,7 +75,7 @@ namespace Xamarin.Forms.Build.Tasks
 			}
 
 			memberRef = propertyDef.PropertyType;
-			var getterDef = module.ImportReference(propertyDef.GetMethod);
+			var getterDef = module.GetOrImportReference(propertyDef.GetMethod);
 			return new [] { Instruction.Create(OpCodes.Call, getterDef) };
 		}
 
@@ -86,8 +86,8 @@ namespace Xamarin.Forms.Build.Tasks
 			                                       fd.IsStatic &&
 			                                       fd.IsPublic, out declaringTypeReference);
 			if (fRef != null) {
-				fRef = module.ImportReference(fRef.ResolveGenericParameters(declaringTypeReference));
-				fRef.FieldType = module.ImportReference(fRef.FieldType);
+				fRef = module.GetOrImportReference(fRef.ResolveGenericParameters(declaringTypeReference));
+				fRef.FieldType = module.GetOrImportReference(fRef.FieldType);
 			}
 			return fRef;
 		}

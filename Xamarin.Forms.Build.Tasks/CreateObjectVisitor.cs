@@ -39,7 +39,7 @@ namespace Xamarin.Forms.Build.Tasks
 
 		public void Visit(ElementNode node, INode parentNode)
 		{
-			var typeref = Module.ImportReference(node.XmlType.GetTypeReference(Module, node));
+			var typeref = Module.GetOrImportReference(node.XmlType.GetTypeReference(Module, node));
 			TypeDefinition typedef = typeref.Resolve();
 
 			if (IsXaml2009LanguagePrimitive(node)) {
@@ -53,7 +53,7 @@ namespace Xamarin.Forms.Build.Tasks
 			}
 
 			//if this is a MarkupExtension that can be compiled directly, compile and returns the value
-			var compiledMarkupExtensionName = typeref.GetCustomAttribute(Module.ImportReference(typeof(ProvideCompiledAttribute)))?.ConstructorArguments?[0].Value as string;
+			var compiledMarkupExtensionName = typeref.GetCustomAttribute(Module.GetOrImportReference(typeof(ProvideCompiledAttribute)))?.ConstructorArguments?[0].Value as string;
 			Type compiledMarkupExtensionType;
 			ICompiledMarkupExtension markupProvider;
 			if (compiledMarkupExtensionName != null &&
@@ -61,7 +61,7 @@ namespace Xamarin.Forms.Build.Tasks
 				(markupProvider = Activator.CreateInstance(compiledMarkupExtensionType) as ICompiledMarkupExtension) != null) {
 
 				var il = markupProvider.ProvideValue(node, Module, Context, out typeref);
-				typeref = Module.ImportReference(typeref);
+				typeref = Module.GetOrImportReference(typeref);
 
 				var vardef = new VariableDefinition(typeref);
 				Context.Variables[node] = vardef;
@@ -148,15 +148,15 @@ namespace Xamarin.Forms.Build.Tasks
 				} else if (node.CollectionItems.Count == 1 && (vnode = node.CollectionItems.First() as ValueNode) != null &&
 						   implicitOperatorref != null) {
 					//<FileImageSource>path.png</FileImageSource>
-					var implicitOperator = Module.ImportReference(implicitOperatorref);
+					var implicitOperator = Module.GetOrImportReference(implicitOperatorref);
 					Context.IL.Emit(OpCodes.Ldstr, ((ValueNode)(node.CollectionItems.First())).Value as string);
 					Context.IL.Emit(OpCodes.Call, implicitOperator);
 					Context.IL.Emit(OpCodes.Stloc, vardef);
 				} else if (factorymethodinforef != null) {
-					Context.IL.Emit(OpCodes.Call, Module.ImportReference(factorymethodinforef));
+					Context.IL.Emit(OpCodes.Call, Module.GetOrImportReference(factorymethodinforef));
 					Context.IL.Emit(OpCodes.Stloc, vardef);
 				} else if (!typedef.IsValueType) {
-					var ctor = Module.ImportReference(ctorinforef);
+					var ctor = Module.GetOrImportReference(ctorinforef);
 //					IL_0001:  newobj instance void class [Xamarin.Forms.Core]Xamarin.Forms.Button::'.ctor'()
 //					IL_0006:  stloc.0 
 					Context.IL.Emit(OpCodes.Newobj, ctor);
@@ -167,7 +167,7 @@ namespace Xamarin.Forms.Build.Tasks
 //					IL_000a:  ldc.i4.1 
 //					IL_000b:  call instance void valuetype Test/Foo::'.ctor'(bool)
 
-					var ctor = Module.ImportReference(ctorinforef);
+					var ctor = Module.GetOrImportReference(ctorinforef);
 					Context.IL.Emit(OpCodes.Ldloca, vardef);
 					Context.IL.Append(PushCtorXArguments(factoryCtorInfo, node));
 					Context.IL.Emit(OpCodes.Call, ctor);
@@ -175,7 +175,7 @@ namespace Xamarin.Forms.Build.Tasks
 //					IL_0000:  ldloca.s 0
 //					IL_0002:  initobj Test/Foo
 					Context.IL.Emit(OpCodes.Ldloca, vardef);
-					Context.IL.Emit(OpCodes.Initobj, Module.ImportReference(typedef));
+					Context.IL.Emit(OpCodes.Initobj, Module.GetOrImportReference(typedef));
 				}
 
 				if (typeref.FullName == "Xamarin.Forms.Xaml.ArrayExtension") {
@@ -411,7 +411,7 @@ namespace Xamarin.Forms.Build.Tasks
 				var ctorinfo =
 					Context.Body.Method.Module.TypeSystem.Object.Resolve()
 						.Methods.FirstOrDefault(md => md.IsConstructor && !md.HasParameters);
-				var ctor = Context.Body.Method.Module.ImportReference(ctorinfo);
+				var ctor = Context.Body.Method.Module.GetOrImportReference(ctorinfo);
 				yield return Instruction.Create(OpCodes.Newobj, ctor);
 				break;
 			case "System.Char":
@@ -424,7 +424,7 @@ namespace Xamarin.Forms.Build.Tasks
 			case "System.Decimal":
 				decimal outdecimal;
 				if (hasValue && decimal.TryParse(valueString, NumberStyles.Number, CultureInfo.InvariantCulture, out outdecimal)) {
-					var vardef = new VariableDefinition(Context.Body.Method.Module.ImportReference(typeof(decimal)));
+					var vardef = new VariableDefinition(Context.Body.Method.Module.GetOrImportReference(typeof(decimal)));
 					Context.Body.Variables.Add(vardef);
 					//Use an extra temp var so we can push the value to the stack, just like other cases
 					//					IL_0003:  ldstr "adecimal"
@@ -436,29 +436,29 @@ namespace Xamarin.Forms.Build.Tasks
 					yield return Instruction.Create(OpCodes.Ldstr, valueString);
 					yield return Instruction.Create(OpCodes.Ldc_I4, 0x6f); //NumberStyles.Number
 					var getInvariantInfo =
-						Context.Body.Method.Module.ImportReference(typeof(CultureInfo))
+						Context.Body.Method.Module.GetOrImportReference(typeof(CultureInfo))
 							.Resolve()
 							.Properties.FirstOrDefault(pd => pd.Name == "InvariantCulture")
 							.GetMethod;
-					var getInvariant = Context.Body.Method.Module.ImportReference(getInvariantInfo);
+					var getInvariant = Context.Body.Method.Module.GetOrImportReference(getInvariantInfo);
 					yield return Instruction.Create(OpCodes.Call, getInvariant);
 					yield return Instruction.Create(OpCodes.Ldloca, vardef);
 					var tryParseInfo =
-						Context.Body.Method.Module.ImportReference(typeof(decimal))
+						Context.Body.Method.Module.GetOrImportReference(typeof(decimal))
 							.Resolve()
 							.Methods.FirstOrDefault(md => md.Name == "TryParse" && md.Parameters.Count == 4);
-					var tryParse = Context.Body.Method.Module.ImportReference(tryParseInfo);
+					var tryParse = Context.Body.Method.Module.GetOrImportReference(tryParseInfo);
 					yield return Instruction.Create(OpCodes.Call, tryParse);
 					yield return Instruction.Create(OpCodes.Pop);
 					yield return Instruction.Create(OpCodes.Ldloc, vardef);
 				} else {
 					yield return Instruction.Create(OpCodes.Ldc_I4_0);
 					var decimalctorinfo =
-						Context.Body.Method.Module.ImportReference(typeof(decimal))
+						Context.Body.Method.Module.GetOrImportReference(typeof(decimal))
 							.Resolve()
 							.Methods.FirstOrDefault(
 								md => md.IsConstructor && md.Parameters.Count == 1 && md.Parameters [0].ParameterType.FullName == "System.Int32");
-					var decimalctor = Context.Body.Method.Module.ImportReference(decimalctorinfo);
+					var decimalctor = Context.Body.Method.Module.GetOrImportReference(decimalctorinfo);
 					yield return Instruction.Create(OpCodes.Newobj, decimalctor);
 				}
 				break;
@@ -479,51 +479,51 @@ namespace Xamarin.Forms.Build.Tasks
 			case "System.TimeSpan":
 				TimeSpan outspan;
 				if (hasValue && TimeSpan.TryParse(valueString, CultureInfo.InvariantCulture, out outspan)) {
-					var vardef = new VariableDefinition(Context.Body.Method.Module.ImportReference(typeof(TimeSpan)));
+					var vardef = new VariableDefinition(Context.Body.Method.Module.GetOrImportReference(typeof(TimeSpan)));
 					Context.Body.Variables.Add(vardef);
 					//Use an extra temp var so we can push the value to the stack, just like other cases
 					yield return Instruction.Create(OpCodes.Ldstr, valueString);
 					var getInvariantInfo =
-						Context.Body.Method.Module.ImportReference(typeof(CultureInfo))
+						Context.Body.Method.Module.GetOrImportReference(typeof(CultureInfo))
 							.Resolve()
 							.Properties.FirstOrDefault(pd => pd.Name == "InvariantCulture")
 							.GetMethod;
-					var getInvariant = Context.Body.Method.Module.ImportReference(getInvariantInfo);
+					var getInvariant = Context.Body.Method.Module.GetOrImportReference(getInvariantInfo);
 					yield return Instruction.Create(OpCodes.Call, getInvariant);
 					yield return Instruction.Create(OpCodes.Ldloca, vardef);
 					var tryParseInfo =
-						Context.Body.Method.Module.ImportReference(typeof(TimeSpan))
+						Context.Body.Method.Module.GetOrImportReference(typeof(TimeSpan))
 							.Resolve()
 							.Methods.FirstOrDefault(md => md.Name == "TryParse" && md.Parameters.Count == 3);
-					var tryParse = Context.Body.Method.Module.ImportReference(tryParseInfo);
+					var tryParse = Context.Body.Method.Module.GetOrImportReference(tryParseInfo);
 					yield return Instruction.Create(OpCodes.Call, tryParse);
 					yield return Instruction.Create(OpCodes.Pop);
 					yield return Instruction.Create(OpCodes.Ldloc, vardef);
 				} else {
 					yield return Instruction.Create(OpCodes.Ldc_I8, 0L);
 					var timespanctorinfo =
-						Context.Body.Method.Module.ImportReference(typeof(TimeSpan))
+						Context.Body.Method.Module.GetOrImportReference(typeof(TimeSpan))
 							.Resolve()
 							.Methods.FirstOrDefault(
 								md => md.IsConstructor && md.Parameters.Count == 1 && md.Parameters [0].ParameterType.FullName == "System.Int64");
-					var timespanctor = Context.Body.Method.Module.ImportReference(timespanctorinfo);
+					var timespanctor = Context.Body.Method.Module.GetOrImportReference(timespanctorinfo);
 					yield return Instruction.Create(OpCodes.Newobj, timespanctor);
 				}
 				break;
 			case "System.Uri":
 				Uri outuri;
 				if (hasValue && Uri.TryCreate(valueString, UriKind.RelativeOrAbsolute, out outuri)) {
-					var vardef = new VariableDefinition(Context.Body.Method.Module.ImportReference(typeof(Uri)));
+					var vardef = new VariableDefinition(Context.Body.Method.Module.GetOrImportReference(typeof(Uri)));
 					Context.Body.Variables.Add(vardef);
 					//Use an extra temp var so we can push the value to the stack, just like other cases
 					yield return Instruction.Create(OpCodes.Ldstr, valueString);
 					yield return Instruction.Create(OpCodes.Ldc_I4, (int)UriKind.RelativeOrAbsolute);
 					yield return Instruction.Create(OpCodes.Ldloca, vardef);
 					var tryCreateInfo =
-						Context.Body.Method.Module.ImportReference(typeof(Uri))
+						Context.Body.Method.Module.GetOrImportReference(typeof(Uri))
 							.Resolve()
 							.Methods.FirstOrDefault(md => md.Name == "TryCreate" && md.Parameters.Count == 3);
-					var tryCreate = Context.Body.Method.Module.ImportReference(tryCreateInfo);
+					var tryCreate = Context.Body.Method.Module.GetOrImportReference(tryCreateInfo);
 					yield return Instruction.Create(OpCodes.Call, tryCreate);
 					yield return Instruction.Create(OpCodes.Pop);
 					yield return Instruction.Create(OpCodes.Ldloc, vardef);
@@ -533,7 +533,7 @@ namespace Xamarin.Forms.Build.Tasks
 			default:
 				var defaultctorinfo = typedef.Methods.FirstOrDefault(md => md.IsConstructor && !md.HasParameters);
 				if (defaultctorinfo != null) {
-					var defaultctor = Context.Body.Method.Module.ImportReference(defaultctorinfo);
+					var defaultctor = Context.Body.Method.Module.GetOrImportReference(defaultctorinfo);
 					yield return Instruction.Create(OpCodes.Newobj, defaultctor);
 				} else {
 					//should never happen. but if it does, this prevents corrupting the IL stack
