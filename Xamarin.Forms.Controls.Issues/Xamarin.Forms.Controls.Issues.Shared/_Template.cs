@@ -1,4 +1,5 @@
-﻿using Xamarin.Forms.CustomAttributes;
+﻿using System;
+using Xamarin.Forms.CustomAttributes;
 using Xamarin.Forms.Internals;
 
 #if UITEST
@@ -31,5 +32,43 @@ namespace Xamarin.Forms.Controls.Issues
 			RunningApp.Screenshot ("I see the Label");
 		}
 #endif
+	}
+
+	[Preserve(AllMembers = true)]
+	[Issue(IssueTracker.Github, 1355, "Setting Main Page in quick succession causes crash on Android",
+		PlatformAffected.Android)]
+	public class GitHub1355 : TestContentPage
+	{
+		int _runCount = 0;
+		private int _maxRunCount = 2;
+
+		protected override void Init()
+		{
+			Appearing += OnAppearing;
+		}
+
+		private void OnAppearing(object o, EventArgs eventArgs)
+		{
+			Application.Current.MainPage = CreatePage();
+		}
+
+		ContentPage CreatePage()
+		{
+			var page = new ContentPage();
+			
+			page.Content = new Label { Text = $"Iteration: {_runCount}"};
+			page.Title = $"CreatePage Iteration: {_runCount}";
+
+			page.Appearing += (sender, args) =>
+			{
+				_runCount += 1;
+				if (_runCount <= _maxRunCount)
+				{
+					Application.Current.MainPage = new NavigationPage(CreatePage());
+				}
+			};
+
+			return page;
+		}
 	}
 }

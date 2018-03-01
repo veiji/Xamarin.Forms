@@ -215,11 +215,38 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 			base.Dispose(disposing);
 		}
 
+		bool StillInTheHierarchy()
+		{
+			var root = (Page)Element;
+
+			while (!Application.IsApplicationOrNull(root.RealParent))
+			{
+				root = (Page)root.RealParent;
+			}
+
+			return root.RealParent != null;
+		}
+
 		protected override void OnAttachedToWindow()
 		{
 			base.OnAttachedToWindow();
+
 			PageController.SendAppearing();
+
+			if (!StillInTheHierarchy())
+			{
+				return;
+			}
+
 			RegisterToolbar();
+
+			var navController = (INavigationPageController)Element;
+
+			foreach (Page page in navController.Pages)
+			{
+				PushViewAsync(page, false);
+			}
+
 			UpdateToolbar();
 		}
 
@@ -278,10 +305,17 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				navController.RemovePageRequested += OnRemovePageRequested;
 
 				// If there is already stuff on the stack we need to push it
-				foreach (Page page in navController.Pages)
-				{
-					PushViewAsync(page, false);
-				}
+
+				// I strongly suspect this might be our problem
+				// This is calling all the switchcontentasync stuff before this
+				// renderer is really ready to commit transactions
+
+
+
+				//foreach (Page page in navController.Pages)
+				//{
+				//	PushViewAsync(page, false);
+				//}
 			}
 		}
 
@@ -718,7 +752,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 			// We don't currently support fragment restoration, so we don't need to worry about
 			// whether the commit loses state
-			transaction.CommitAllowingStateLoss();
+			transaction.CommitNowAllowingStateLoss();
 
 			// The fragment transitions don't really SUPPORT telling you when they end
 			// There are some hacks you can do, but they actually are worse than just doing this:
