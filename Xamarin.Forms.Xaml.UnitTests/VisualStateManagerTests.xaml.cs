@@ -108,6 +108,8 @@ namespace Xamarin.Forms.Xaml.UnitTests
 
 				Assert.NotNull(groups);
 				Assert.That(groups.Count, Is.EqualTo(2));
+
+				Assert.True(VisualStateManager.GoToState(entry, "Disabled"));
 			}
 
 			[TestCase(false)]
