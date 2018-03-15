@@ -285,6 +285,7 @@ namespace Xamarin.Forms.Platform.Android
 				return;
 
 			parent.SetClipChildren(shouldClip);
+			// parent.SetClipToPadding(false);
 			parent.Invalidate();
 		}
 
