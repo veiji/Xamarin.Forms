@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xamarin.Forms.CustomAttributes;
 using Xamarin.Forms.Internals;
@@ -18,52 +19,23 @@ namespace Xamarin.Forms.Controls.Issues
 		[Preserve(AllMembers = true)]
 		public class _1760Master : ContentPage
 		{
-			class Item
-			{
-				public string Name { get; set; }
-
-				public int Key { get; set; }
-			}
-
 			public _1760Master()
 			{
-				var items = new List<Item>
-				{
-					new Item { Name = "Test Page", Key = 1 }
-				};
-
-				var cell = new DataTemplate(typeof(TextCell));
-				cell.SetBinding(TextCell.TextProperty, "Name");
-
 				var menuView = new ListView(ListViewCachingStrategy.RetainElement)
 				{
-					ItemTemplate = cell,
-					ItemsSource = items,
-					HasUnevenRows = true
+					ItemsSource = new List<string> { "Test Page" }
 				};
+
 				menuView.ItemSelected += OnMenuClicked;
 
 				Content = menuView;
-				Title = "Test App";
+				Title = "GH 1760 Test App";
 			}
 
 			void OnMenuClicked(object sender, SelectedItemChangedEventArgs e)
 			{
-				var item = (Item)e.SelectedItem;
-				Page next;
-				switch (item.Key)
-				{
-					case 1:
-						next = new _1760TestPage();
-						break;
-					default:
-						next = new _1760TestPage();
-						break;
-				}
-
-				//var detail = new NavigationPage(next);
-				var mainPage = ((MasterDetailPage)Parent);
-				mainPage.Detail = next;
+				var mainPage = (MasterDetailPage)Parent;
+				mainPage.Detail = new _1760TestPage();
 				mainPage.IsPresented = false;
 			}
 		}
@@ -71,57 +43,40 @@ namespace Xamarin.Forms.Controls.Issues
 		[Preserve(AllMembers = true)]
 		public class _1760TestPage : ContentPage
 		{
-			public async Task DisplayPage()
+			public 
+				//async Task 
+				void
+				DisplayPage()
 			{
 				IsBusy = true;
 				HeaderPageContent = new Label {Text = "Before the await", TextColor = Color.Black};
 
-				await Task.Delay(5000);
+				//await Task.Delay(3000);
 				HeaderPageContent = new Label { Text = "After the await", TextColor = Color.Black}; 
 			}
 
-			private bool _useTitleImage = true;
-			//private bool _useTitleImage = false;
-         
-			private Label _headerLabel;
-			public string HeaderLabel
-			{
-				get { return _headerLabel.Text; }
-				set { _headerLabel.Text = value; }
-			}
-
-			private ContentView _headerPageContent;
+			ContentView _headerPageContent;
 			public View HeaderPageContent
 			{
-				set { _headerPageContent.Content = value; }
+				set => _headerPageContent.Content = value;
 			}
-
-			public new Color BackgroundColor
-			{
-				set { _headerPageContent.BackgroundColor = value; }
-			}
-
 
 			public _1760TestPage()
 			{
-				CreateHeaderPage(null, string.Empty, true);
+				CreateHeaderPage();
 				DisplayPage();
 			}
 
-			private void CreateHeaderPage(Layout page, string headerText, bool scrollEnabled)
+			void CreateHeaderPage()
 			{
-
-				Icon = "hamenu.png"; 
-				Title = "Memory Test";  
-
 				_headerPageContent = new ContentView
 				{
-					Content = page,
+					Content = new Label { Text = "_1760 Test Page Content" },
 					BackgroundColor = Color.White,
-					HorizontalOptions = LayoutOptions.FillAndExpand,
-					VerticalOptions = LayoutOptions.FillAndExpand,
-					Margin = 20
+					Margin = 40
 				};
+
+				Title = "_1760 Test Page";  
 
 				// works
 				//Content = new StackLayout
