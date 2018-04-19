@@ -23,7 +23,7 @@ namespace Xamarin.Forms.Controls.Issues
 			{
 				var menuView = new ListView(ListViewCachingStrategy.RetainElement)
 				{
-					ItemsSource = new List<string> { "Test Page" }
+					ItemsSource = new List<string> { "Test Page 1", "Test Page 2" }
 				};
 
 				menuView.ItemSelected += OnMenuClicked;
@@ -44,15 +44,16 @@ namespace Xamarin.Forms.Controls.Issues
 		public class _1760TestPage : ContentPage
 		{
 			public 
-				//async Task 
-				void
+				async Task 
+				//void
 				DisplayPage()
 			{
 				IsBusy = true;
 				HeaderPageContent = new Label {Text = "Before the await", TextColor = Color.Black};
 
-				//await Task.Delay(3000);
-				HeaderPageContent = new Label { Text = "After the await", TextColor = Color.Black}; 
+				await Task.Delay(1000);
+				HeaderPageContent = new Label { Text = "After the await", TextColor = Color.Black};
+				IsBusy = false;
 			}
 
 			ContentView _headerPageContent;
@@ -76,7 +77,7 @@ namespace Xamarin.Forms.Controls.Issues
 					Margin = 40
 				};
 
-				Title = "_1760 Test Page";  
+				Title = "_1760 Test Page";
 
 				// works
 				//Content = new StackLayout
