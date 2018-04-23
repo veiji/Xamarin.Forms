@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Android.Content;
 using Android.Views;
 
@@ -23,6 +24,11 @@ namespace Xamarin.Forms.Platform.Android
 
 				RemoveAllViews();
 
+				if (_childView is ContentView)
+				{
+					_childView.PropertyChanged -= ContentViewPropertyChanged;
+				}
+
 				_childView = value;
 
 				if (_childView == null)
@@ -36,7 +42,22 @@ namespace Xamarin.Forms.Platform.Android
 					renderer.View.RemoveFromParent();
 
 				AddView(renderer.View);
+
+				if (_childView is ContentView)
+				{
+					_childView.PropertyChanged += ContentViewPropertyChanged;
+				}
 			}
+		}
+
+		void ContentViewPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+		{
+			if (propertyChangedEventArgs.PropertyName != ContentView.ContentProperty.PropertyName)
+			{
+				return;
+			}
+		
+			RequestLayout();
 		}
 
 		protected override void Dispose(bool disposing)
