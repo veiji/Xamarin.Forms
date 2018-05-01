@@ -99,14 +99,16 @@ namespace Xamarin.Forms.Platform.Android
 		{
 			if (disposing && !_disposed)
 			{
-				if (Control != null && ManageNativeControlLifetime)
+				if (Control != null)
 				{
 					Control.OnFocusChangeListener = null;
-					RemoveView(Control);
-					Control.Dispose();
-					Control = null;
 				}
+			}
 
+			base.Dispose(disposing);
+
+			if (disposing && !_disposed)
+			{
 				if (_container != null && _container != this)
 				{
 					_container.RemoveFromParent();
@@ -123,7 +125,7 @@ namespace Xamarin.Forms.Platform.Android
 				_disposed = true;
 			}
 
-			base.Dispose(disposing);
+			
 		}
 
 		protected override void OnElementChanged(ElementChangedEventArgs<TView> e)
